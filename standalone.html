@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PIXEL QUIZ - Standalone Mode</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #1a1a2e;
+            --primary-color: #e94560;
+            --secondary-color: #0f3460;
+            --accent-color: #4ecca3;
+            --text-color: #ffffff;
+            --pixel-border: 4px;
+        }
+        * { box-sizing: border-box; font-family: 'Press Start 2P', cursive; image-rendering: pixelated; }
+        body { margin: 0; background-color: var(--bg-color); color: var(--text-color); display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; }
+        .pixel-box { background: var(--secondary-color); border: var(--pixel-border) solid #000; box-shadow: inset -4px -4px 0px 0px rgba(0,0,0,0.2), 4px 4px 0px 0px rgba(0,0,0,0.5); padding: 20px; max-width: 600px; width: 90%; position: relative; }
+        .pixel-button { background: var(--primary-color); color: white; border: var(--pixel-border) solid #000; padding: 10px 20px; cursor: pointer; box-shadow: inset -4px -4px 0px 0px rgba(0,0,0,0.3), inset 4px 4px 0px 0px rgba(255,255,255,0.3); text-transform: uppercase; font-size: 14px; width: 100%; margin: 5px 0; }
+        .pixel-input { background: #fff; border: var(--pixel-border) solid #000; padding: 10px; width: 100%; margin-bottom: 20px; outline: none; font-size: 12px; }
+        .pixel-title { color: var(--accent-color); text-shadow: 4px 4px 0px #000; text-align: center; font-size: 18px; margin-bottom: 20px; }
+        .game-master { width: 100px; height: 100px; background: #333; border: 4px solid #fff; margin: 0 auto 15px; display: block; }
+        .scanlines::before { content: " "; position: absolute; top: 0; left: 0; bottom: 0; right: 0; background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%); background-size: 100% 4px; z-index: 2; pointer-events: none; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState } = React;
+
+        const StandaloneApp = () => {
+            const [status, setStatus] = useState('IDLE');
+            const [userId, setUserId] = useState('');
+            const [questions, setQuestions] = useState([]);
+            const [currentIndex, setCurrentIndex] = useState(0);
+            const [results, setResults] = useState(null);
+
+            // --- 配置區 ---
+            // 請在此處貼入你的 Google Apps Script 網頁應用程式 URL
+            const GAS_URL = ""; 
+
+            const mockData = [
+                { id: 1, question: "生成式 AI 中，LLM 是什麼？", options: { A: "語言模型", B: "圖像模型", C: "預測模型", D: "以上皆否" } },
+                { id: 2, question: "下列何者為文字轉圖模型？", options: { A: "GPT-4", B: "Midjourney", C: "Siri", D: "Alexa" } }
+            ];
+
+            const start = async () => {
+                if(!userId) return alert("請輸入 ID");
+                setStatus('QUIZ');
+                setQuestions(mockData);
+            };
+
+            const handleAnswer = (key) => {
+                if(currentIndex + 1 < questions.length) {
+                    setCurrentIndex(currentIndex + 1);
+                } else {
+                    setStatus('RESULT');
+                    setResults({ score: 2, total: 2, isPassed: true });
+                }
+            };
+
+            if (status === 'IDLE') return (
+                <div className="pixel-box scanlines">
+                    <h1 className="pixel-title">PIXEL QUIZ</h1>
+                    <p style={{textAlign:'center', fontSize:'10px'}}>無需 NPM / Node.js 模式</p>
+                    <input className="pixel-input" placeholder="PLAYER ID..." value={userId} onChange={e => setUserId(e.target.value)} />
+                    <button className="pixel-button" onClick={start}>START MISSION</button>
+                </div>
+            );
+
+            if (status === 'QUIZ') return (
+                <div className="pixel-box scanlines">
+                    <div className="pixel-title">STAGE {currentIndex + 1}</div>
+                    <img className="game-master" src={`https://api.dicebear.com/7.x/pixel-art/svg?seed=m${currentIndex}`} />
+                    <p style={{textAlign:'center'}}>{questions[currentIndex].question}</p>
+                    {Object.entries(questions[currentIndex].options).map(([k, v]) => (
+                        <button key={k} className="pixel-button" onClick={() => handleAnswer(k)}>{k}: {v}</button>
+                    ))}
+                </div>
+            );
+
+            if (status === 'RESULT') return (
+                <div className="pixel-box scanlines" style={{textAlign:'center'}}>
+                    <h1 className="pixel-title">MISSION CLEAR</h1>
+                    <p>SCORE: {results.score} / {results.total}</p>
+                    <button className="pixel-button" onClick={() => setStatus('IDLE')}>RETRY</button>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<StandaloneApp />);
+    </script>
+</body>
+</html>
